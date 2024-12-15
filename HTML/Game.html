@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Portfolio - Mini Game 🎮</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #404040;
+            --secondary-color: #2c2c2c;
+            --background-color: #f5f5f5;
+            --text-color: #333333;
+            --accent-color: #666666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #e6e6e6 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .nav-bar {
+            background-color: #032B44; /* Navy blue */
+            padding: 10px;
+            text-align: center;
+        }
+
+        .nav-bar ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-bar li {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        .nav-bar a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .nav-bar a:hover {
+            color: #ccc;
+        }
+
+        .drop-down {
+            position: relative;
+            display: inline-block;
+        }
+
+        .drop-down-content {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            min-width: 160px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .drop-down-content a {
+            color: #fff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .drop-down-content a:hover {
+            background-color: #444;
+        }
+
+        .drop-down:hover .drop-down-content {
+            display: block;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 6rem auto 2rem;
+            padding: 0 2rem;
+        }
+
+        .game-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .treasure-cell {
+            aspect-ratio: 1;
+            background: var(--background-color);
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .treasure-cell:hover {
+            transform: scale(1.05);
+        }
+
+        .game-info {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: var(--secondary-color);
+        }
+
+        .hint {
+            text-align: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .game-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .game-section {
+                padding: 1rem;
+            }
+
+            .section-title {
+                margin-bottom: 1rem;
+            }
+
+            .game-info {
+                margin: 1rem 0;
+            }
+
+            .game-controls {
+                margin: 0.5rem 0;
+            }
+
+            .hint {
+                margin: 0.5rem 0;
+                padding: 0.5rem;
+            }
+        }
+    </style>
+    <script>
+        let attempts = 10;
+        let score = 0;
+        let treasurePosition;
+        let gameActive = true;
+
+        function initializeGame() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = ''; // Clear existing grid
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'treasure-cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', handleCellClick);
+                grid.appendChild(cell);
+            }
+            treasurePosition = Math.floor(Math.random() * 25); // Set treasure position
+            updateDisplay();
+        }
+
+        function handleCellClick(event) {
+            if (!gameActive) return;
+
+            const clickedIndex = parseInt(event.target.dataset.index);
+            attempts--;
+
+            if (clickedIndex === treasurePosition) {
+                event.target.innerHTML = '💎';
+                score += attempts * 10;
+                gameActive = false;
+                document.getElementById('hint').textContent = 'Congratulations! You found the treasure! 🎉';
+            } else {
+                const distance = getDistance(clickedIndex, treasurePosition);
+                event.target.innerHTML = '❌';
+                updateHint(distance);
+            }
+
+            if (attempts <= 0 && gameActive) {
+                gameActive = false;
+                document.getElementById('hint').textContent = 'Game Over! The treasure was not found 😢';
+                revealTreasure();
+            }
+
+            updateDisplay();
+        }
+
+        function getDistance(index1, index2) {
+            const row1 = Math.floor(index1 / 5);
+            const col1 = index1 % 5;
+            const row2 = Math.floor(index2 / 5);
+            const col2 = index2 % 5;
+            const direction = getDirection(row1, col1, row2, col2);
+            return {
+                distance: Math.abs(row1 - row2) + Math.abs(col1 - col2),
+                direction: direction
+            };
+        }
+
+        function getDirection(row1, col1, row2, col2) {
+            if (row1 === row2 && col1 < col2) return 'right';
+            if (row1 === row2 && col1 > col2) return 'left';
+            if (col1 === col2 && row1 < row2) return 'down';
+            if (col1 === col2 && row1 > row2) return 'up';
+            return 'unknown';
+        }
+
+        function updateHint(distance) {
+            const hint = document.getElementById('hint');
+            if (distance.distance <= 2) {
+                hint.textContent = `Very hot! The treasure is near! 🔥 It's to the ${distance.direction} of your current position.`;
+            } else if (distance.distance <= 4) {
+                hint.textContent = `Warm! Getting closer! 😊 It's to the ${distance.direction} of your current position.`;
+            } else {
+                hint.textContent = `Cold! Try another spot! ❄️ It's to the ${distance.direction} of your current position.`;
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('attempts').textContent = attempts;
+            document.getElementById('score').textContent = score;
+        }
+
+        function revealTreasure() {
+            const cells = document.querySelectorAll('.treasure-cell');
+            cells[treasurePosition].innerHTML = '💎';
+        }
+
+        function resetGame() {
+            attempts = 10;
+            score = 0;
+            gameActive = true;
+            document.getElementById('hint').textContent = 'Start hunting for the treasure! 🔍';
+            initializeGame();
+        }
+
+        // Initialize the game when the page loads
+        window.onload = initializeGame;
+    </script>
+</head>
+<body>
+    <div class="nav-bar">
+        <ul>
+            <li class="drop-down">
+                <a href="#">Pages</a>
+                <div class="drop-down-content">
+                    <a href="Index.html">Index</a>
+                    <a href="Information.html">Informations</a>
+                    <a href="Skill.html">Skills</a>
+                    <a href="Experience.html">Work Experience</a>
+                    <a href="Contact.html">Contact</a>
+                    <a href="Game.html">Game</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <section class="game-section">
+            <div class="section-title">
+                <h2>Treasure Hunt Game 🗺️</h2>
+                <p>Find the hidden treasure in 10 attempts! 🏴‍☠️</p>
+            </div>
+            <div id="gameGrid" class="game-grid"></div>
+            <div class="game-info">
+                <p>Attempts Left: <span id="attempts">10</span></p>
+                <p>Score: <span id="score">0</span></p>
+            </div>
+            <div class="game-controls">
+                <button onclick="resetGame()">Restart Game</button>
+            </div>
+            <div id="hint" class="hint">Start hunting for the treasure! 🔍</div>
+        </section>
+    </div>
+</body>
+</html>
